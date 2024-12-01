@@ -4,7 +4,7 @@ use std::{
     thread,
 };
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 struct Coord {
     x: f32,
     y: f32,
@@ -78,9 +78,6 @@ struct Canvas {
 }
 
 impl Canvas {
-    fn new() -> Self {
-        Canvas { shapes: Vec::new() }
-    }
     fn add(&mut self, shape: ShapeObject) {
         self.shapes.push(shape);
     }
@@ -118,7 +115,7 @@ fn main() {
         height: 4.0,
     })) as ShapeObject;
 
-    let mut canvas = Canvas::new();
+    let mut canvas = Canvas { shapes: Vec::new() };
     canvas.add(circle);
     canvas.add(rectangle);
     canvas.add(triangle);
@@ -152,4 +149,47 @@ fn main() {
         "rectangle origin: {:?}",
         canvas.get(1).unwrap().lock().unwrap().origin()
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Test the area computations
+    #[test]
+    fn calculate_shape_areas() {
+        let rectangle = Rectangle {
+            origin: Coord::default(),
+            side_a: 2.0,
+            side_b: 4.0,
+        };
+        assert_eq!(rectangle.get_area(), 8.0);
+
+        // Repeat for different values and shapes
+    }
+
+    // Test the canvas api: set_origin, remove, etc
+    #[test]
+    fn update_origin() {
+        let rectangle = Rectangle {
+            origin: Coord::default(),
+            side_a: 2.0,
+            side_b: 4.0,
+        };
+        let canvas = Canvas {
+            shapes: vec![Arc::new(Mutex::new(rectangle))],
+        };
+
+        assert_eq!(
+            canvas.get(0).unwrap().lock().unwrap().origin(),
+            Coord::default()
+        );
+        canvas.set_origin(0, Coord { x: 2.0, y: 2.0 });
+        assert_eq!(
+            canvas.get(0).unwrap().lock().unwrap().origin(),
+            Coord { x: 2.0, y: 2.0 }
+        );
+    }
+
+    // Multithreaded tests - eg what is in main
 }
